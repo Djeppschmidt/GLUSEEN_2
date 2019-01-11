@@ -1,0 +1,156 @@
+---
+title: "Untitled"
+author: "Dietrich Epp Schmidt"
+date: "11/15/2018"
+output: html_document
+---
+
+## Using Python to get functions...
+In case you really want another way to get at function data, you can do it using a python script. Here are the instructions for getting the python output into R:
+
+the python script call for creating count tables of functions:
+
+mg-compare-functions.py
+
+the download and install documentation can be found here:
+
+https://github.com/MG-RAST/MG-RAST-Tools/blob/master/scripts/mg-compare-functions.py
+
+briefly, in a terminal window (assuming you are using OSX or Linnux):
+
+git clone http://github.com/MG-RAST/MG-RAST-Tools
+cd MG-RAST-Tools
+python setup.py build
+sudo python setup.py install
+
+
+An example download script:
+
+mg-compare-functions.py --token "xxyyzz" --ids "mgm4812553.3,mgm4812534.3,mgm4812503.3,mgm4812482.3" --level level3 --source Subsystems --format text --evalue 10 > ~/Desktop/PhD/Metagenome/Function/mgRast_ontologyLVL3_list66.txt
+
+Let's break this down;
+
+--token "xxyyzz" 
+is my personal authentication token that allows me to access my own private metagenomes. This token can be access once you've logged into MG-Rast.org by opening the "my profile" dialogue box, and clicking the "show webkey" icon.
+
+--ids "mgm4812553.3,mgm4812534.3,mgm4812503.3,mgm4812482.3"
+are the unique accession numbers for each metagenome. You can include as many metagenomes as you want in each script call with the very important caveat: the MG-Rast download server has a tendency to clean out temporary files periodically so if you have too many (in my experience, more than 10) metagenomes to compile, it will delete the temporary file where it is compiling the data before it is available to you. This generates an error in terminal and you don't get any data. The solution is to cut up your data into digestible chunks, then compile them later in R (we'll do this in a second)
+
+--level level3
+functional ontology has 4 levels. Level 4 is the most granular, in my experience level 3 is the most interpretable level. Levels 2 and 1 are too aggregated and are good for broad summary of the profile, but not very usefull for answering more specific ecological questions.
+
+--source Subsystems
+There are several ontologies for annotating your data, my favorite is subsystems because it provides the most detailed and interpretable results while also successfully annotating a larger number of the sequences.
+
+--format text
+you have two options; text or json. I find text files to be easier to get into R.
+
+--evalue 10
+this sets the minimum quality for the matches.
+
+(> ~/Desktop/PhD/Metagenome/Function/mgRast_ontologyLVL3_list66.txt)
+designates the output directory path and file name for the downloaded data.
+
+OK, once we've downloaded several files of summary function data, we need to get them together into one larger table.
+define file path to files
+```{r}
+path1<-"~/path/to/files/" #for me: "~/Desktop/PhD/Metagenome/Function/"
+
+```
+load dependencies
+```{r}
+#load dependencies
+library(plyr)
+library(phyloseq)
+```
+make a list of files that you will read into R
+```{r}
+F.files<-list.files(path1, pattern=".txt")
+F.files
+```
+make a list of file paths to those files
+```{r}
+F.filesLong<-paste(path1, F.files, sep="")
+F.filesLong
+```
+read files into R. This creates a list of phyloseq otu tables, where each table in the list represents one file that you read in. These can be considered analagous to data frames.
+```{r}
+F.list.df<-lapply(F.filesLong, read_files)
+F.list.df
+```
+
+Now we merge together our phyloseq otu tables. In this step, we are selecting each phyloseq object from the list we created in the last step, and combining them. I've shown what it will look like if you have 8 tables you want to combine. If you have a longer list, then you will have to select all of them. For example, if you go up to 50, the last one would be "F.list.df[[8]]"
+
+```{r}
+ps.F<-merge_phyloseq(F.list.df[[1]],F.list.df[[2]],F.list.df[[3]],F.list.df[[4]],F.list.df[[5]],F.list.df[[6]],F.list.df[[7]],F.list.df[[8]]) # 
+```
+
+Now we have one large OTU table. The next step is to merge metagenomes that represent the same sample (e.g. forward/reverse reads or multiple sequencing runs). For this you will need a metadata table that has a column that represents unique sample IDs, and another column that represents the unique metagenome IDs. You should have multiple metagenome IDs for each sample ID. In this example, my column of sample IDs is called "Sample_ID"; and my column of unique metagenome IDs is called "MG_ID"
+
+```{r}
+key<-read.csv("~/Desktop/PhD/Metagenome/SampleKey.csv")
+key<-data.frame(key)
+rownames(key)<-key$MG_ID
+```
+
+Ok, a good check before moving on is to make sure that your table has all the same metagenome IDs as your otu table. This is necessary for merging in phyloseq. Phyloseq won't always give an error if the IDs do not match. Many times it will just silently drop metadata that don't match any samples. This is a good check to make sure you have actually downloaded all your samples.
+
+```{r}
+setdiff(key$MG_ID,colnames(otu_table(ps.F)))
+```
+
+Now, we need to import our sample metadata into R. The aggregation function will need it to output a full phyloseq object with function table, and metadata all attached together. This metadata should be structured per your samples, not metagenomes.
+```{r}
+sam<-as.data.frame(read.csv("~/path/to/metadata.csv")) 
+# for me: "~/Desktop/PhD/Metagenome/GLUSEEN_HM2_metadata.csv"
+sam
+```
+
+Now we aggregate the metagenome data together to represent samples. 
+
+```{r}
+ps.F<-condense.F(ps.F, key, sam)
+```
+
+Now the function data is in R and ready for downstream analysis. YAY!
+
+```{r}
+# more indepth with tax table... not sure if necessary?
+#condense2<-function(df, samkey, sam){
+#  require(phyloseq)
+# ps<-phyloseq(otu_table(df, taxa_are_rows = T), sample_data(samkey))
+#  tax<-matrix(data=NA, nrow=length(taxa_names(ps)), ncol=1)
+#  rownames(tax)<-taxa_names(ps)
+#  tax[,1]<-taxa_names(ps)
+#  colnames(tax)<-"Domain"
+#  tax_table(ps)<-tax
+#  ps2<-merge_samples(ps, "Sample_ID", fun = sum)
+#  sample_data(ps2)<-sample_data(sam)
+#  ps2
+#}
+#condense function for using the python script:
+
+#condense.F<-function(df, samkey, sam){
+#  require(phyloseq)
+#  ps<-phyloseq(df, sample_data(samkey))
+#  tax<-matrix(data=NA, nrow=length(taxa_names(ps)), ncol=1)
+#  rownames(tax)<-taxa_names(ps)
+#  tax[,1]<-taxa_names(ps)
+#  colnames(tax)<-"Function"
+#  tax_table(ps)<-tax
+#  ps2<-merge_samples(ps, "Sample_ID", fun = sum)
+#  sample_data(ps2)<-sample_data(sam)
+#  ps2
+#}
+
+# for python scripts ####
+
+# reading into R ####
+#read_files<-function(names){
+#  require(phyloseq)
+#  a<-data.frame(read.delim(names))
+#  rownames(a)<-a$X
+#  a<-a[,-c(1)]
+#  a<-phyloseq(otu_table(a, taxa_are_rows = T))
+#  a
+#} #for lapply to make a bunch of dataframes
