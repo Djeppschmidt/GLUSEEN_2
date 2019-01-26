@@ -437,6 +437,19 @@ ggplot(Zn.sum, aes(x=Cities, y=Zn_tot)) +
   geom_line() +
   geom_point()+theme_bw()
 
+methanogens<-subset_taxa(baclib, Class=="Methanobacteria"|Class=="Methanomicrobia"|Class=="Methanoculleus")
+metabund<-sample_sums(methanogens)
+methdf<-data.frame(metabund, "Codes"=sample_data(methanogens)$Codes)
+
+methsum<-summarySE(methdf, measurevar="metabund", groupvars = "Codes", na.rm=T)
+summary(aov(methdf$metabund~methdf$Codes))
+TukeyHSD(aov(methdf$metabund~methdf$Codes))
+
+
+ggplot(methsum, aes(x=Codes, y=metabund)) +
+  geom_errorbar(aes(ymin=metabund-se, ymax=metabund+se), width=.1) +
+  geom_line() +
+  geom_point()+theme_bw()
 
 # run limma-voom 15 ####
 # L4 City ####
@@ -1180,12 +1193,12 @@ availNickel<-summarySE(dat, measurevar="Ni_avail", groupvars=c("Codes"), na.rm=T
 ggplot(availCobalt, aes(x=Codes, y=Co_avail)) +
   geom_errorbar(aes(ymin=Co_avail-se, ymax=Co_avail+se), width=.2, size=1) +
   geom_line(size=1) +
-  labs(title="Available Co", xlab="Land-use Category", ylab="Co...")+
+  labs(title="Available Co")+xlab("Land-use Category")+
   geom_point()+theme_bw()
 
 ggplot(availNickel, aes(x=Codes, y=Ni_avail)) +
   geom_errorbar(aes(ymin=Ni_avail-se, ymax=Ni_avail+se), width=.2, size=1) +
-  labs(title="Available Ni", xlab="Land-use Category", ylab="Ni...")+
+  labs(title="Available Ni")+xlab("Land-use Category")+
   geom_line(size=1) +
   geom_point()+theme_bw()
 
@@ -1294,6 +1307,7 @@ ggplot(TotalNCity, aes(x=Codes, y=total_N, group=Cities, color=Cities)) +
 ggplot(NH4SE, aes(x=Codes, y=NH4_N)) + 
   geom_errorbar(aes(ymin=NH4_N-se, ymax=NH4_N+se), width=.1, size=1) +
   geom_line() +
+  labs(xlab="Land use", ylab="Ammonium")+
   geom_point()+theme_bw()
 
 ggplot(NO3SE, aes(x=Codes, y=NO3_N)) + 
@@ -1628,8 +1642,8 @@ Dplot4 = pl4D + geom_segment(arrow_map, data = Dfunfitarrows, color = "grey",
 Dplot4+theme_bw()
 
 # bacterial mg-rast ordinations ####
-mgbac<-readRDS("~/Desktop/PhD/Metagenome/Organism/ct_species.RDS")
-mgbac2<-readRDS("~/Desktop/PhD/Metagenome/Organism/ct_species.RDS")
+mgbac<-readRDS("~/Desktop/PhD/Metagenome/Organism/ct_species.RDS")#density workflow
+mgbac2<-readRDS("~/Desktop/PhD/Metagenome/Organism/ct_species.RDS")#relative abundance workflow
 
 sample_data(mgbac)<-sam
 #mgbac2<-subset_samples(mgbac2, sample_sums(mgbac)>1000000)
@@ -1678,11 +1692,11 @@ mgbacfitarrows<-data.frame(labels=rownames(mgbacfit$vectors$arrows), mgbacfit$ve
 mgbacfitarrows$r<-mgbacfit$vectors$r
 mgbacfitarrows$labels<-c("pH", "OM", "Carbonate", "K", "Phosphate", "Ammonium", "Nitrate", "TN", "Total Cd", "Total Co", "Total Ni", "Total Zn")
 arrow_map = aes(xend = NMDS1*r, yend = NMDS2*r, x = 0, y = 0, shape = NULL, color = NULL)
-label_map = aes(x = 1.1*NMDS1*r+c(0,0,0.02,0.02,0.02,0,0.02,0,0.01,-0.02,-0.02,-0.02), y = 1.1*NMDS2*r+c(0,0,0,0,0,0,0,0,0.04,0,0,0), shape = NULL, color = NULL, 
+label_map = aes(x = 1.1*NMDS1*r+c(0,0,0.1,0.02,0.1,0,0.08,0,0.01,-0.02,-0.02,-0.08), y = 1.1*NMDS2*r+c(0,0,0,0,0,0,0,0,0.04,0,0,0), shape = NULL, color = NULL, 
                 label = labels)
 arrowhead = arrow(length = unit(0.03, "npc"))
-mgp3 = ggplot() + geom_segment(arrow_map, data = mgbacfitarrows, color = "black", 
-                        arrow = arrowhead) + geom_text(label_map, size = 4, data = mgbacfitarrows)
+mgp3 = mgp1 + geom_segment(arrow_map, data = mgbacfitarrows, color = "black", 
+                        arrow = arrowhead) + geom_text(label_map, size = 3, data = mgbacfitarrows)
 mgp3+theme_bw()
 
 
@@ -1805,6 +1819,12 @@ metadata<-data.frame(sample_data(bac))
 #brayl1 <- adonis(tab~Cities/Codes, data=metadata)
 bacbrayl1 <- adonis(bactab1~Cities*Codes, data=metadata)
 bacbrayl1  
+
+arctab1<-as.data.frame(as.matrix(otu_table(arc)))
+arcdata<-data.frame(sample_data(arc))
+#brayl1 <- adonis(tab~Cities/Codes, data=metadata)
+arcbrayl1 <- adonis(arctab1~Cities*Codes, data=arcdata)
+arcbrayl1
 
 raw.bac<-subset_taxa(baclib2, Kingdom=="Bacteria")
 bactab2<-as.data.frame(otu_table(raw.bac))
