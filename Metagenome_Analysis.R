@@ -15,17 +15,62 @@ O.key<-read.csv("~/Desktop/PhD/Metagenome/SampleKey.csv")
 O.key<-data.frame(O.key)
 O.key$Seq_ID<-as.character(O.key$Seq_ID) # unique sample IDs
 O.key$Private_ID<-as.character(O.key$MG_ID) # unique accession codes in mgm... .3 format
+rownames(O.key)<-O.key$Seq_ID
  
 l.sID<-as.character(O.key$MG_ID) # make list of accession numbers
 names(l.sID)<-O.key$Seq_ID # name list according to unique sample IDs
 sam<-read.csv("~/Desktop/PhD/Metagenome/GLUSEEN_HM2_metadata.csv")
 rownames(sam)<-sam$Sample_ID2
 
-url.15.4<-lapply(l.sID, mg.load, auth="gbdwiyCZqACamvn8fG59aTs3Z", ont="Subsystems", level="4", E="15", length="15", id="60")
-dt15.l4<-downloadFunc(url.15.4, ont="Subsystems", level=4)
-dt15.l4<-condense(dt15.l4, sample_key, sam)
-ftax<-DFTax(url.15.4)
-tax_table(dt15.l4)<-as.matrix(ftax)
+#url.15.4<-lapply(l.sID, mg.load, auth="gbdwiyCZqACamvn8fG59aTs3Z", ont="Subsystems", level="4", E="15", length="15", id="60")# not working?
+#dt15.l4<-downloadFunc(url.15.4, ont="Subsystems", level=4)
+#dt15.l4<-condense(dt15.l4, sample_key, sam)
+#ftax<-DFTax(url.15.4)
+#tax_table(dt15.l4)<-as.matrix(ftax)
+
+url.L20.ID90<-lapply(l.sID, mg.load, auth="gbdwiyCZqACamvn8fG59aTs3Z", ont="Subsystems", level="4", E="15", length="100", id="90")# works!! returns no annotated data... if error/NULL, check auth code. Sometimes copy/pasting back in works even if the auth code hasn't updated
+
+#no data here!!^
+
+url.L50.ID80<-lapply(l.sID, mg.load, auth="gbdwiyCZqACamvn8fG59aTs3Z", ont="Subsystems", level="4", E="15", length="50", id="80")# works!! returns no annotated data... if error/NULL, check auth code. Sometimes copy/pasting back in works even if the auth code hasn't updated
+dt.L20.ID80.level4<-downloadFunc(url.L20.ID80, ont="Subsystems", level=4) #if error: dims [product 1] do not match the length of object [0]; wait to resubmit MG-RAST request
+OTU.dt.L20.ID80.level4<-condense(dt.L20.ID80.level4, O.key, sam)
+
+
+url.L50.ID60<-lapply(l.sID, mg.load, auth="gbdwiyCZqACamvn8fG59aTs3Z", ont="Subsystems", level="4", E="15", length="50", id="60")
+dt.L50.ID60.level4<-downloadFunc(url.L50.ID60, ont="Subsystems", level=4) #if error: dims [product 1] do not match the length of object [0]; wait to resubmit MG-RAST request
+OTU.dt.L50.ID60.level4<-condense(dt.L50.ID60.level4, O.key, sam)
+
+
+url.L30.ID60<-lapply(l.sID, mg.load, auth="gbdwiyCZqACamvn8fG59aTs3Z", ont="Subsystems", level="4", E="15", length="50", id="60")
+dt.L30.ID60.level4<-downloadFunc(url.L30.ID60, 4, "Subsystems") #if error: dims [product 1] do not match the length of object [0]; wait to resubmit MG-RAST request
+OTU.dt.L30.ID60.level4<-condense(dt.L30.ID60.level4, O.key, sam)
+
+# download test case for trouble shooting ####
+url.test<-lapply(l.sID[1:5], mg.load, auth="gbdwiyCZqACamvn8fG59aTs3Z", ont="Subsystems", level="4", E="15", length="50", id="60")
+
+
+d.fTest<-download.F(url.L30.ID60$`003_R1_022417`, 4, "Subsystems")
+d2.fTest<-downloadFunc(url.test, 4, "Subsystems")
+
+s.dlT<-fromJSON(content(GET(url.L20.ID80$`003_R1_022417`), "text"), flatten=T)
+dnload<-ldply(url.L20.ID80, download.F, level=4, ont="Subsystems")
+names(dnload) <- c("ID", "Function", "Values")
+dnload$Values <- as.numeric(dnload$Values)
+dnload$Function <- as.character(dnload$Function)
+dnload <- na.omit(dnload)
+t.fw <- as.data.frame(dcast(dnload, Function ~ ID, fun.aggregate = sum, 
+        na.omit = T))
+rownames(t.fw) <- paste(t.fw$Function, c(1:length(rownames(t.fw))))
+t.fw <- t.fw[, -1]
+t.fw[is.na(t.fw)] <- 0
+t.fw[] <- lapply(t.fw, as.numeric)
+OTU.dt.L20.ID80.level4<-condense(t.fw,  O.key, sam)
+
+factor<-round(50000*(sample_data(OTU.dt.L20.ID80.level4)$gperg_DNA/(mean(sample_data(OTU.dt.L20.ID80.level4)$gperg_DNA))))
+table(sample_sums(OTU.dt.L20.ID80.level4)>factor)
+R.OTU.dt.L20.ID80.level4<-rrarefy(otu_table(OTU.dt.L20.ID80.level4), factor)
+
 
 # subsetting/normalizing data for analysis
 saveRDS(dt15.l4, "~/Desktop/PhD/Metagenome/Function/dt15l4.RDS")
@@ -364,6 +409,9 @@ tax_table(clss)
 # anova for soil param ####
 
 env.param<-as.data.frame(sample_data(baclib))
+env.param$Cities<-as.character(env.param$Cities)
+env.param$Cities[env.param$Cities=="Lakti"]<-"Lahti"
+env.param$Cities[env.param$Cities=="South Africa"]<-"Potchefstroom"
 
 summary(aov(env.param$Cd_tot~env.param$Codes*env.param$Cities))
 summary(aov(env.param$Co_tot~env.param$Codes*env.param$Cities))
@@ -392,6 +440,17 @@ Cd.sum<-summarySE(env.param, measurevar="Cd_tot", groupvars = "Cities", na.rm=T)
 Co.sum<-summarySE(env.param, measurevar="Co_tot", groupvars = "Cities", na.rm=T)
 Ni.sum<-summarySE(env.param, measurevar="Ni_tot", groupvars = "Cities", na.rm=T)
 Zn.sum<-summarySE(env.param, measurevar="Zn_tot", groupvars = "Cities", na.rm=T)
+
+Cdb.sum<-summarySE(env.param, measurevar="Cd_tot", groupvars = "Codes", na.rm=T)
+Cob.sum<-summarySE(env.param, measurevar="Co_tot", groupvars = "Codes", na.rm=T)
+Nib.sum<-summarySE(env.param, measurevar="Ni_tot", groupvars = "Codes", na.rm=T)
+Znb.sum<-summarySE(env.param, measurevar="Zn_tot", groupvars = "Codes", na.rm=T)
+
+Cda.sum<-summarySE(env.param, measurevar="Cd_avail", groupvars = "Cities", na.rm=T)
+Coa.sum<-summarySE(env.param, measurevar="Co_avail", groupvars = "Cities", na.rm=T)
+Nia.sum<-summarySE(env.param, measurevar="Ni_avail", groupvars = "Cities", na.rm=T)
+Zna.sum<-summarySE(env.param, measurevar="Zn_avail", groupvars = "Cities", na.rm=T)
+
 Cdavail.sum<-summarySE(env.param, measurevar="Cd_avail", groupvars = "Codes", na.rm=T)
 Coavail.sum<-summarySE(env.param, measurevar="Co_avail", groupvars = "Codes", na.rm=T)
 Niavail.sum<-summarySE(env.param, measurevar="Ni_avail", groupvars = "Codes", na.rm=T)
@@ -404,6 +463,66 @@ colnames(AOA.sum)<-c("Codes","N", "Copies", "sd", "se", "ci")
 colnames(AOB.sum)<-c("Codes", "N", "Copies", "sd", "se", "ci")
 comb<-rbind(AOA.sum, AOB.sum)
 comb$group<-c("A","A","A","A", "B","B","B","B")
+
+ggplot(Niavail.sum, aes(x=Codes, y=Ni_avail)) +
+  geom_errorbar(aes(ymin=Ni_avail-se, ymax=Ni_avail+se), width=.1) +
+  geom_line() +
+  geom_point()+theme_bw()
+
+ggplot(Coavail.sum, aes(x=Codes, y=Co_avail)) +
+  geom_errorbar(aes(ymin=Co_avail-se, ymax=Co_avail+se), width=.1) +
+  geom_line() +
+  geom_point()+theme_bw()
+
+ggplot(Cdavail.sum, aes(x=Codes, y=Cd_avail)) +
+  geom_errorbar(aes(ymin=Cd_avail-se, ymax=Cd_avail+se), width=.1) +
+  geom_line() +
+  geom_point()+theme_bw()
+
+ggplot(Znavail.sum, aes(x=Codes, y=Zn_avail)) +
+  geom_errorbar(aes(ymin=Zn_avail-se, ymax=Zn_avail+se), width=.1) +
+  geom_line() +
+  geom_point()+theme_bw()
+
+ggplot(Nia.sum, aes(x=Cities, y=Ni_avail)) +
+  geom_errorbar(aes(ymin=Ni_avail-se, ymax=Ni_avail+se), width=.1) +
+  geom_line() +
+  geom_point()+theme_bw()
+
+ggplot(Coa.sum, aes(x=Cities, y=Co_avail)) +
+  geom_errorbar(aes(ymin=Co_avail-se, ymax=Co_avail+se), width=.1) +
+  geom_line() +
+  geom_point()+theme_bw()
+
+ggplot(Cda.sum, aes(x=Cities, y=Cd_avail)) +
+  geom_errorbar(aes(ymin=Cd_avail-se, ymax=Cd_avail+se), width=.1) +
+  geom_line() +
+  geom_point()+theme_bw()
+
+ggplot(Zna.sum, aes(x=Cities, y=Zn_avail)) +
+  geom_errorbar(aes(ymin=Zn_avail-se, ymax=Zn_avail+se), width=.1) +
+  geom_line() +
+  geom_point()+theme_bw()
+
+ggplot(Nib.sum, aes(x=Codes, y=Ni_tot)) +
+  geom_errorbar(aes(ymin=Ni_tot-se, ymax=Ni_tot+se), width=.1) +
+  geom_line() +
+  geom_point()+theme_bw()
+
+ggplot(Cob.sum, aes(x=Codes, y=Co_tot)) +
+  geom_errorbar(aes(ymin=Co_tot-se, ymax=Co_tot+se), width=.1) +
+  geom_line() +
+  geom_point()+theme_bw()
+
+ggplot(Cdb.sum, aes(x=Codes, y=Cd_tot)) +
+  geom_errorbar(aes(ymin=Cd_tot-se, ymax=Cd_tot+se), width=.1) +
+  geom_line() +
+  geom_point()+theme_bw()
+
+ggplot(Znb.sum, aes(x=Codes, y=Zn_tot)) +
+  geom_errorbar(aes(ymin=Zn_tot-se, ymax=Zn_tot+se), width=.1) +
+  geom_line() +
+  geom_point()+theme_bw()
 
 ggplot(comb, aes(x=Codes, y=Copies)) +
   geom_errorbar(aes(ymin=Copies-se, ymax=Copies+se, color=group), 
@@ -1404,6 +1523,63 @@ plot_bar(transform_sample_counts(bac, function(x)x/sum(x)), x="Codes", fill="  P
 
 plot_bar(bac, fill="Phylum", facet_grid="Codes")
 
+# function differential expression ####
+
+counts<-t(as.data.frame(as.matrix(otu_table(OTU.dt.L20.ID80.level4))))
+geneid <- rownames(counts)
+
+categories<-data.frame("Cities"=as.factor(sample_data(OTU.dt.L20.ID80.level4)$Cities), "Landuse"=as.factor(sample_data(OTU.dt.L20.ID80.level4)$Codes))
+
+
+f.design<-model.matrix(~0+Landuse, categories)
+#colnames(design) <- gsub("group3", "", colnames(design))
+contr.matrix <- makeContrasts(
+  TurfvRef = LanduseTurf-LanduseReference, 
+  RemvRef = LanduseRemnant-LanduseReference, 
+  RudvRef = LanduseRuderal-LanduseReference, 
+  levels = colnames(f.design))
+contr.matrix
+
+
+f.dge <- DGEList(counts=counts)
+
+f.keep <- filterByExpr(f.dge, f.design)
+f.dge <- f.dge[f.keep,,keep.lib.sizes=FALSE]
+
+f.dge <- calcNormFactors(f.dge)
+
+f.dge$genes<-geneid
+flcpm<-cpm(f.dge, log=TRUE)
+col.group <- categories$Cities
+#levels(col.group) <-  brewer.pal(nlevels(col.group), "Set1")
+#sym<-as.factor(categories$Landuse)
+#plotMDS(flcpm, col=col.group, pch=as.numeric(sym))
+
+f.v <- voom(f.dge, f.design, plot=TRUE)
+
+f.fitV <- lmFit(f.v, f.design)
+
+f.fitV <- contrasts.fit(f.fitV, contrasts=contr.matrix)
+f.fitV <- eBayes(f.fitV, trend=TRUE)
+f.topgenes<-topTable(f.fitV, number=100, coef=3)
+f.siggenes<-f.topgenes[f.topgenes$adj.P.Val<0.05,]
+
+summary(decideTests(f.fitV)) # run all together; naming scheme overwrites/not unique!!
+f.sigsummary<-decideTests(f.fitV)
+f.TurfP <- which(f.sigsummary[,1]==1)
+f.TurfN <- which(f.sigsummary[,1]==-1)
+f.RemP <- which(f.sigsummary[,2]==1)
+f.RemN <- which(f.sigsummary[,2]==-1)
+f.RudP <- which(f.sigsummary[,3]==1)
+f.RudN <- which(f.sigsummary[,3]==-1)
+
+names(f.TurfP)
+names(f.TurfN)
+f.RemP
+f.RemN
+names(f.RudP)
+names(f.RudN)
+
 # bac differential expression ####
 
 tax<-paste(tax_table(bac)[,6], c(1:55700), sep="")
@@ -1925,7 +2101,7 @@ plot_bar(dt15l1, x="Cities")
 
 mg.amoa<-data.frame("mg"=sample_sums(RDT.ammoa), "QPCRAOA"=sample_data(RDT.ammoa)$AmoA_copies, "QPCRAOB"=sample_data(RDT.ammoa)$AmoB_copies,"Land"=sample_data(RDT.ammoa)$Codes, "City"=sample_data(RDT.ammoa)$Cities)
 
-with(mg.amoa, cor(log10(mg), log10(QPCRAOA), use="pairwise.complete.obs"))
+with(mg.amoa, cor(log10(mg), log10(QPCRAOA), use="pairwise.complete.obs"))#NaN
 with(mg.amoa, plot(log10(mg)~log10(QPCRAOA), col=Land))
 with(mg.amoa, plot(log10(mg)~log10(QPCRAOA), col=City, pch=c(1,2,3,4)[as.numeric(Land)]))
 
@@ -2410,7 +2586,7 @@ p4d$dat<-
 phylosig(trefile, NFT.cor$SS00448, method="lambda", test=TRUE)
 phyloSignal(tree, methods="lambda", reps=999)
 
-
+ 
 # convergence testing Networks ####
 library(car)
 
