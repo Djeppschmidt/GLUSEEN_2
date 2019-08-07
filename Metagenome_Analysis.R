@@ -22,98 +22,17 @@ names(l.sID)<-O.key$Seq_ID # name list according to unique sample IDs
 sam<-read.csv("~/Desktop/PhD/Metagenome/GLUSEEN_HM2_metadata.csv")
 rownames(sam)<-sam$Sample_ID2
 
-# summry data on input/output from MG-Rast QC and annotation run
-seqP.summary<-seqstats(l.sID, O.key)
-#url.15.4<-lapply(l.sID, mg.load, auth="gbdwiyCZqACamvn8fG59aTs3Z", ont="Subsystems", level="4", E="15", length="15", id="60")# not working?
-#dt15.l4<-downloadFunc(url.15.4, ont="Subsystems", level=4)
-#dt15.l4<-condense(dt15.l4, sample_key, sam)
-#ftax<-DFTax(url.15.4)
-#tax_table(dt15.l4)<-as.matrix(ftax)
+url.15.4<-lapply(l.sID, mg.load, auth="gbdwiyCZqACamvn8fG59aTs3Z", ont="Subsystems", level="4", E="15", length="15", id="60")# not working?
+dt15.l4<-downloadFunc(url.15.4, ont="Subsystems", level=4)
+dt15.l4<-condense(dt15.l4, sample_key, sam)
+ftax<-DFTax(url.15.4)
+tax_table(dt15.l4)<-as.matrix(ftax)
 
-
-# download the data at several different filter cutoffs!
 url.L20.ID90<-lapply(l.sID, mg.load, auth="gbdwiyCZqACamvn8fG59aTs3Z", ont="Subsystems", level="4", E="15", length="100", id="90")# works!! returns no annotated data... if error/NULL, check auth code. Sometimes copy/pasting back in works even if the auth code hasn't updated
+url.L20.ID90<-lapply(l.sID, mg.load, auth="gbdwiyCZqACamvn8fG59aTs3Z", ont="Subsystems", level="4", E="15", length="50", id="80")# works!! returns no annotated data... if error/NULL, check auth code. Sometimes copy/pasting back in works even if the auth code hasn't updated
 
-#no data here!!^
-
-# download 50 bp 80%
-url.L50.ID80<-lapply(l.sID, mg.load, auth="gbdwiyCZqACamvn8fG59aTs3Z", ont="Subsystems", level="4", E="15", length="50", id="80")# works!! returns no annotated data... if error/NULL, check auth code. Sometimes copy/pasting back in works even if the auth code hasn't updated
-dt.L50.ID80.level4<-downloadFunc(url.L50.ID80, ont="Subsystems", level=4) #if error: dims [product 1] do not match the length of object [0]; wait to resubmit MG-RAST request
-OTU.dt.L50.ID80.level4<-condense(dt.L50.ID80.level4, O.key, sam)
-factor<-round(50000*(sample_data(OTU.dt.L50.ID80.level4)$gperg_DNA/(mean(sample_data(OTU.dt.L50.ID80.level4)$gperg_DNA))))
-table(sample_sums(OTU.dt.L50.ID80.level4)>factor)
-R.OTU.dt.L50.ID80.level4<-rrarefy(otu_table(OTU.dt.L50.ID80.level4), factor)
-N.OTU.dt.L50.ID80.level4<-OTU.dt.L50.ID80.level4
-otu_table(N.OTU.dt.L50.ID80.level4)<-otu_table(R.OTU.dt.L50.ID80.level4, taxa_are_rows = T)
-N.OTU.dt.L50.ID80.level4<-prune_samples(sample_sums(N.OTU.dt.L50.ID80.level4)==factor, N.OTU.dt.L50.ID80.level4)
-
-# download 50bp 60%
-url.L50.ID60<-lapply(l.sID, mg.load, auth="gbdwiyCZqACamvn8fG59aTs3Z", ont="Subsystems", level="4", E="15", length="50", id="60")
-dt.L50.ID60.level4<-downloadFunc(url.L50.ID60, ont="Subsystems", level=4) #if error: dims [product 1] do not match the length of object [0]; wait to resubmit MG-RAST request
-OTU.dt.L50.ID60.level4<-condense(dt.L50.ID60.level4, O.key, sam)
-factor<-round(50000*(sample_data(OTU.dt.L50.ID60.level4)$gperg_DNA/(mean(sample_data(OTU.dt.L50.ID60.level4)$gperg_DNA))))
-table(sample_sums(OTU.dt.L50.ID60.level4)>factor)
-R.OTU.dt.L50.ID60.level4<-rrarefy(otu_table(OTU.dt.L50.ID60.level4), factor)
-N.OTU.dt.L50.ID60.level4<-OTU.dt.L50.ID60.level4
-otu_table(N.OTU.dt.L50.ID60.level4)<-otu_table(R.OTU.dt.L50.ID60.level4, taxa_are_rows = T)
-N.OTU.dt.L50.ID60.level4<-prune_samples(sample_sums(N.OTU.dt.L50.ID60.level4)==factor, N.OTU.dt.L50.ID60.level4)
-
-# download 30 bp 80%
-url.L30.ID80<-lapply(l.sID, mg.load, auth="gbdwiyCZqACamvn8fG59aTs3Z", ont="Subsystems", level="4", E="15", length="30", id="80")
-dt.L30.ID80.level4<-downloadFunc(url.L30.ID80, 4, "Subsystems") #if error: dims [product 1] do not match the length of object [0]; wait to resubmit MG-RAST request
-OTU.dt.L30.ID80.level4<-condense(dt.L30.ID80.level4, O.key, sam)
-factor<-round(3000000*(sample_data(OTU.dt.L30.ID80.level4)$gperg_DNA/(mean(sample_data(OTU.dt.L30.ID80.level4)$gperg_DNA))))
-table(sample_sums(OTU.dt.L30.ID80.level4)>factor)
-R.OTU.dt.L30.ID80.level4<-rrarefy(otu_table(OTU.dt.L30.ID80.level4), factor)
-N.OTU.dt.L30.ID80.level4<-OTU.dt.L30.ID80.level4
-otu_table(N.OTU.dt.L30.ID80.level4)<-otu_table(R.OTU.dt.L30.ID80.level4, taxa_are_rows = T)
-N.OTU.dt.L30.ID80.level4<-prune_samples(sample_sums(N.OTU.dt.L30.ID80.level4)==factor, N.OTU.dt.L30.ID80.level4)
-
-# download 30 bp 60%
-url.L30.ID60<-lapply(l.sID, mg.load, auth="gbdwiyCZqACamvn8fG59aTs3Z", ont="Subsystems", level="4", E="15", length="30", id="60")
-dt.L30.ID60.level4<-downloadFunc(url.L30.ID60, 4, "Subsystems") #if error: dims [product 1] do not match the length of object [0]; wait to resubmit MG-RAST request
-OTU.dt.L30.ID60.level4<-condense(dt.L30.ID60.level4, O.key, sam)
-factor<-round(3000000*(sample_data(OTU.dt.L30.ID60.level4)$gperg_DNA/(mean(sample_data(OTU.dt.L30.ID60.level4)$gperg_DNA))))
-table(sample_sums(OTU.dt.L30.ID60.level4)>factor)
-R.OTU.dt.L30.ID60.level4<-rrarefy(otu_table(OTU.dt.L30.ID60.level4), factor)
-N.OTU.dt.L30.ID60.level4<-OTU.dt.L30.ID60.level4
-otu_table(N.OTU.dt.L30.ID60.level4)<-otu_table(R.OTU.dt.L30.ID60.level4, taxa_are_rows = T)
-N.OTU.dt.L30.ID60.level4<-prune_samples(sample_sums(N.OTU.dt.L30.ID60.level4)==factor, N.OTU.dt.L30.ID60.level4)
-
-# download 15 bp 80%
-url.L15.ID80<-lapply(l.sID, mg.load, auth="gbdwiyCZqACamvn8fG59aTs3Z", ont="Subsystems", level="4", E="15", length="15", id="80")
-dt.L15.ID80.level4<-downloadFunc(url.L15.ID80, 4, "Subsystems") #if error: dims [product 1] do not match the length of object [0]; wait to resubmit MG-RAST request
-OTU.dt.L15.ID80.level4<-condense(dt.L15.ID80.level4, O.key, sam)
-factor<-round(3000000*(sample_data(OTU.dt.L15.ID80.level4)$gperg_DNA/(mean(sample_data(OTU.dt.L15.ID80.level4)$gperg_DNA))))
-table(sample_sums(OTU.dt.L15.ID80.level4)>factor)
-R.OTU.dt.L15.ID80.level4<-rrarefy(otu_table(OTU.dt.L15.ID80.level4), factor)
-N.OTU.dt.L15.ID80.level4<-OTU.dt.L15.ID80.level4
-otu_table(N.OTU.dt.L15.ID80.level4)<-otu_table(R.OTU.dt.L15.ID80.level4, taxa_are_rows = T)
-N.OTU.dt.L15.ID80.level4<-prune_samples(sample_sums(N.OTU.dt.L15.ID80.level4)==factor, N.OTU.dt.L15.ID80.level4)
-
-
-# download test case for trouble shooting ####
-url.test<-lapply(l.sID[1:5], mg.load, auth="gbdwiyCZqACamvn8fG59aTs3Z", ont="Subsystems", level="4", E="15", length="50", id="60")
-
-
-d.fTest<-download.F(url.L30.ID60$`003_R1_022417`, 4, "Subsystems")
-d2.fTest<-downloadFunc(url.test, 4, "Subsystems")
-
-s.dlT<-fromJSON(content(GET(url.L20.ID80$`003_R1_022417`), "text"), flatten=T)
-dnload<-ldply(url.L20.ID80, download.F, level=4, ont="Subsystems")
-names(dnload) <- c("ID", "Function", "Values")
-dnload$Values <- as.numeric(dnload$Values)
-dnload$Function <- as.character(dnload$Function)
-dnload <- na.omit(dnload)
-t.fw <- as.data.frame(dcast(dnload, Function ~ ID, fun.aggregate = sum, 
-        na.omit = T))
-rownames(t.fw) <- paste(t.fw$Function, c(1:length(rownames(t.fw))))
-t.fw <- t.fw[, -1]
-t.fw[is.na(t.fw)] <- 0
-t.fw[] <- lapply(t.fw, as.numeric)
-OTU.dt.L20.ID80.level4<-condense(t.fw,  O.key, sam)
-
-# calculate relative abundance ####
+dt.L20.ID80.level4<-downloadFunc(url.L20.ID90, ont="Subsystems", level=4) #if error: dims [product 1] do not match the length of object [0]; wait to resubmit MG-RAST request
+dt.L20.ID80.level4<-condense(dt.L20.ID80.level4, O.key, sam)
 
 
 # subsetting/normalizing data for analysis
@@ -226,10 +145,6 @@ groups2<-data.frame("Cities"=c(rep("Baltimore", 4), rep("Helsinki",4), rep("Laht
 RDT.ammoa<-subset_taxa(L4Norm, L4=="Ammonia monooxygenase")
 
 # subset functions ####
-N.metabolism<-subset_taxa(L4Norm, L1=="Nitrogen Metabolism")
-
-AromaticCompounds<-subset_taxa(L4Norm, L1=="Metabolism of Aromatic Compounds")
-
 Nitrite.R.All<-subset_taxa(L4Norm, L4=="Copper-containing nitrite reductase (EC 1.7.2.1)"|
                              L4=="Cytochrome cd1 nitrite reductase (EC:1.7.2.1)"|
                              L4=="Nitric oxide reductase activation protein NorD"|
@@ -618,32 +533,6 @@ ggplot(methsum, aes(x=Codes, y=metabund)) +
   geom_line() +
   geom_point()+theme_bw()
 
-# summarize soil parameters by city ####
-env.param<-as.data.frame(as.matrix(sample_data(OTU.dt.L50.ID60.level4)))
-# pH by city
-# NH4 by city
-# NO3 by city
-# total N by city
-# OrgC by city
-env.p<-env.param[,c(4,7,10,14:16)]
-env.p<-data.frame(env.p)
-#env.p$Cities<-as.numeric((env.p$Cities))
-env.p$pH.H2O<-as.numeric(as.character(env.p$pH.H2O))
-env.p$C_org<-as.numeric(as.character(env.p$C_org))
-env.p$NH4_N<-as.numeric(as.character(env.p$NH4_N))
-env.p$NO3_N<-as.numeric(as.character(env.p$NO3_N))
-env.p$total_N<-as.numeric(as.character(env.p$total_N))
-env.p<-na.omit(env.p)
-env.summary<-dplyr::tbl_df(env.p) %>% group_by(Cities) %>% summarize_all(mean)
-env.summary
-
-std <- function(x) sd(x)/sqrt(length(x))
-env.summary2<-dplyr::tbl_df(env.p) %>% group_by(Cities) %>% summarize_all(std)
-env.summary2
-
-ddply(data.frame("gene"=sample_sums(subset_taxa(rdt15.l4, L4=="Multiple antibiotic resistance protein MarA")), "Land"=sample_data(rdt15.l4)$Codes), .(Land), summarise, 
-      median=median(gene),
-      mean=mean(gene))
 # run limma-voom 15 ####
 # L4 City ####
 dt.L4<-tax_glom(dt15.l4, "L4")
@@ -1032,7 +921,7 @@ B2de.TurfN <- which(B2sigsummary[,1]==-1)
 B2de.RudP <- which(B2sigsummary[,3]==1)
 B2de.RudN <- which(B2sigsummary[,3]==-1)
 
-# Potchefstroom
+# South Africa
 
 SAcounts<-t(as.data.frame(as.matrix(otu_table(SouthAfrica.F))))
 geneid <- rownames(SAcounts)
@@ -1129,8 +1018,6 @@ saveRDS(fit,"~/Desktop/PhD/Metagenome/Function/limmaVoomFit_citiesonly.RDS")
 fit.cities<-readRDS("~/Desktop/PhD/Metagenome/Function/limmaVoomFit_citiesonly.RDS")
 
 # landuse only
-
-counts
 
 design3<-model.matrix(~Landuse, categories)
 dge3 <- DGEList(counts=counts)
@@ -1601,123 +1488,10 @@ plot_bar(bac, fill="Phylum", facet_grid="Codes")
 
 # function differential expression ####
 
-# Function @ 15 bp match 60% e -15
-counts.d<-t(as.data.frame(as.matrix(otu_table(L4Norm))))
-geneid <- rownames(counts.d)
-
-categories<-data.frame("Cities"=as.factor(sample_data(L4Norm)$Cities), "Landuse"=as.factor(sample_data(L4Norm)$Codes))
-
-
-f.design<-model.matrix(~0+Landuse, categories)
-#colnames(design) <- gsub("group3", "", colnames(design))
-contr.matrix <- makeContrasts(
-  TurfvRef = LanduseTurf-LanduseReference, 
-  RemvRef = LanduseRemnant-LanduseReference, 
-  RudvRef = LanduseRuderal-LanduseReference, 
-  levels = colnames(f.design))
-contr.matrix
-
-
-fd.dge <- DGEList(counts=counts.d)
-
-fd.keep <- filterByExpr(fd.dge, f.design)
-fd.dge <- fd.dge[fd.keep,,keep.lib.sizes=FALSE]
-
-fd.dge <- calcNormFactors(fd.dge)
-
-#fd.dge$genes<-geneid
-#flcpm<-cpm(f.dge, log=TRUE)
-#col.group <- categories$Cities
-#levels(col.group) <-  brewer.pal(nlevels(col.group), "Set1")
-#sym<-as.factor(categories$Landuse)
-#plotMDS(flcpm, col=col.group, pch=as.numeric(sym))
-
-fd.v <- voom(fd.dge, f.design, plot=TRUE)
-
-fd.fitV <- lmFit(fd.v, f.design)
-
-fd.fitV <- contrasts.fit(fd.fitV, contrasts=contr.matrix)
-fd.fitV <- eBayes(fd.fitV, trend=TRUE)
-fd.topgenes<-topTable(fd.fitV, number=100, coef=3)
-fd.siggenes<-fd.topgenes[fd.topgenes$adj.P.Val<0.05,]
-
-summary(decideTests(fd.fitV)) # run all together; naming scheme overwrites/not unique!!
-fd.sigsummary<-decideTests(fd.fitV)
-fd.TurfP <- which(fd.sigsummary[,1]==1)
-fd.TurfN <- which(fd.sigsummary[,1]==-1)
-fd.RemP <- which(fd.sigsummary[,2]==1)
-fd.RemN <- which(fd.sigsummary[,2]==-1)
-fd.RudP <- which(fd.sigsummary[,3]==1)
-fd.RudN <- which(fd.sigsummary[,3]==-1)
-
-names(fd.TurfP)
-names(fd.TurfN)
-f.RemP
-f.RemN
-names(f.RudP)
-names(f.RudN)
-
-# Function @ 15 bp match 80% e -15
-counts.d2<-t(as.data.frame(as.matrix(otu_table(N.OTU.dt.L15.ID80.level4))))
-geneid <- rownames(counts.d2)
-
-categories<-data.frame("Cities"=as.factor(sample_data(N.OTU.dt.L15.ID80.level4)$Cities), "Landuse"=as.factor(sample_data(N.OTU.dt.L15.ID80.level4)$Codes))
-
-
-f.design<-model.matrix(~0+Landuse, categories)
-#colnames(design) <- gsub("group3", "", colnames(design))
-contr.matrix <- makeContrasts(
-  TurfvRef = LanduseTurf-LanduseReference, 
-  RemvRef = LanduseRemnant-LanduseReference, 
-  RudvRef = LanduseRuderal-LanduseReference, 
-  levels = colnames(f.design))
-contr.matrix
-
-
-fd2.dge <- DGEList(counts=counts.d2)
-
-fd2.keep <- filterByExpr(fd2.dge, f.design)
-fd2.dge <- fd2.dge[fd2.keep,,keep.lib.sizes=FALSE]
-
-fd2.dge <- calcNormFactors(fd2.dge)
-
-#fd.dge$genes<-geneid
-#flcpm<-cpm(f.dge, log=TRUE)
-#col.group <- categories$Cities
-#levels(col.group) <-  brewer.pal(nlevels(col.group), "Set1")
-#sym<-as.factor(categories$Landuse)
-#plotMDS(flcpm, col=col.group, pch=as.numeric(sym))
-
-fd2.v <- voom(fd2.dge, f.design, plot=TRUE)
-
-fd2.fitV <- lmFit(fd2.v, f.design)
-
-fd2.fitV <- contrasts.fit(fd2.fitV, contrasts=contr.matrix)
-fd2.fitV <- eBayes(fd2.fitV, trend=TRUE)
-fd2.topgenes<-topTable(fd2.fitV, number=100, coef=3)
-fd2.siggenes<-fd2.topgenes[fd2.topgenes$adj.P.Val<0.05,]
-
-summary(decideTests(fd2.fitV)) # run all together; naming scheme overwrites/not unique!!
-fd2.sigsummary<-decideTests(fd2.fitV)
-fd2.TurfP <- which(fd2.sigsummary[,1]==1)
-fd2.TurfN <- which(fd2.sigsummary[,1]==-1)
-fd2.RemP <- which(fd2.sigsummary[,2]==1)
-fd2.RemN <- which(fd2.sigsummary[,2]==-1)
-fd2.RudP <- which(fd2.sigsummary[,3]==1)
-fd2.RudN <- which(fd2.sigsummary[,3]==-1)
-
-names(fd2.TurfP)
-names(fd2.TurfN)
-names(fd2.RemP)
-names(fd2.RemN)
-names(fd2.RudP)
-names(fd2.RudN)
-
-# Function @ 50 bp match 80% e -15
-counts<-t(as.data.frame(as.matrix(otu_table(N.OTU.dt.L50.ID80.level4))))
+counts<-t(as.data.frame(as.matrix(otu_table(dt.L20.ID80.level4))))
 geneid <- rownames(counts)
 
-categories<-data.frame("Cities"=as.factor(sample_data(N.OTU.dt.L50.ID80.level4)$Cities), "Landuse"=as.factor(sample_data(N.OTU.dt.L50.ID80.level4)$Codes))
+categories<-data.frame("Cities"=as.factor(sample_data(dt.L20.ID80.level4)$Cities), "Landuse"=as.factor(sample_data(dt.L20.ID80.level4)$Codes))
 
 
 f.design<-model.matrix(~0+Landuse, categories)
@@ -1740,13 +1514,13 @@ f.dge <- calcNormFactors(f.dge)
 f.dge$genes<-geneid
 flcpm<-cpm(f.dge, log=TRUE)
 col.group <- categories$Cities
-#levels(col.group) <-  brewer.pal(nlevels(col.group), "Set1")
-#sym<-as.factor(categories$Landuse)
-#plotMDS(flcpm, col=col.group, pch=as.numeric(sym))
+levels(col.group) <-  brewer.pal(nlevels(col.group), "Set1")
+sym<-as.factor(categories$Landuse)
+plotMDS(flcpm, col=col.group, pch=as.numeric(sym))
 
 f.v <- voom(f.dge, f.design, plot=TRUE)
 
-f.fitV <- lmFit(f.v, f.design)
+f.fitV <- lmFit(v, f.design)
 
 f.fitV <- contrasts.fit(f.fitV, contrasts=contr.matrix)
 f.fitV <- eBayes(f.fitV, trend=TRUE)
@@ -1754,7 +1528,7 @@ f.topgenes<-topTable(f.fitV, number=100, coef=3)
 f.siggenes<-f.topgenes[f.topgenes$adj.P.Val<0.05,]
 
 summary(decideTests(f.fitV)) # run all together; naming scheme overwrites/not unique!!
-f.sigsummary<-decideTests(f.fitV)
+f.sigsummary<-decideTests(bacfitV)
 f.TurfP <- which(f.sigsummary[,1]==1)
 f.TurfN <- which(f.sigsummary[,1]==-1)
 f.RemP <- which(f.sigsummary[,2]==1)
@@ -1764,182 +1538,10 @@ f.RudN <- which(f.sigsummary[,3]==-1)
 
 names(f.TurfP)
 names(f.TurfN)
-names(f.RemP)
-names(f.RemN)
+f.RemP
+f.RemN
 names(f.RudP)
 names(f.RudN)
-
-
-# Function @ 50 bp match 60% e -15
-counts.2<-t(as.data.frame(as.matrix(otu_table(N.OTU.dt.L50.ID60.level4))))
-geneid <- rownames(counts.2)
-
-categories<-data.frame("Cities"=as.factor(sample_data(N.OTU.dt.L50.ID60.level4)$Cities), "Landuse"=as.factor(sample_data(N.OTU.dt.L50.ID60.level4)$Codes))
-
-
-f.design<-model.matrix(~0+Landuse, categories)
-#colnames(design) <- gsub("group3", "", colnames(design))
-contr.matrix <- makeContrasts(
-  TurfvRef = LanduseTurf-LanduseReference, 
-  RemvRef = LanduseRemnant-LanduseReference, 
-  RudvRef = LanduseRuderal-LanduseReference, 
-  levels = colnames(f.design))
-contr.matrix
-
-
-f2.dge <- DGEList(counts=counts.2)
-
-f2.keep <- filterByExpr(f2.dge, f.design)
-f2.dge <- f2.dge[f2.keep,,keep.lib.sizes=FALSE]
-
-f2.dge <- calcNormFactors(f2.dge)
-
-#f2.dge$genes<-geneid
-#flcpm2<-cpm(f2.dge, log=TRUE)
-#col.group <- categories$Cities
-#levels(col.group) <-  brewer.pal(nlevels(col.group), "Set1")
-#sym<-as.factor(categories$Landuse)
-#plotMDS(flcpm, col=col.group, pch=as.numeric(sym))
-
-f2.v <- voom(f2.dge, f.design, plot=TRUE)
-
-f2.fitV <- lmFit(f2.v, f.design)
-
-f2.fitV <- contrasts.fit(f2.fitV, contrasts=contr.matrix) # not a mistake; contrast matrix is the same
-f2.fitV <- eBayes(f2.fitV, trend=TRUE)
-f2.topgenes<-topTable(f2.fitV, number=100, coef=3)
-f2.siggenes<-f2.topgenes[f2.topgenes$adj.P.Val<0.05,]
-
-summary(decideTests(f2.fitV)) # run all together; naming scheme overwrites/not unique!!
-f2.sigsummary<-decideTests(f2.fitV)
-f2.TurfP <- which(f2.sigsummary[,1]==1)
-f2.TurfN <- which(f2.sigsummary[,1]==-1)
-f2.RemP <- which(f2.sigsummary[,2]==1)
-f2.RemN <- which(f2.sigsummary[,2]==-1)
-f2.RudP <- which(f2.sigsummary[,3]==1)
-f2.RudN <- which(f2.sigsummary[,3]==-1)
-
-names(f2.TurfP)
-names(f2.TurfN)
-names(f2.RemP)
-names(f2.RemN)
-names(f2.RudP)
-names(f2.RudN)
-
-# Function @ 30 bp match 80% e -15
-counts3<-t(as.data.frame(as.matrix(otu_table(N.OTU.dt.L30.ID80.level4))))
-geneid <- rownames(counts3)
-
-categories<-data.frame("Cities"=as.factor(sample_data(N.OTU.dt.L30.ID80.level4)$Cities), "Landuse"=as.factor(sample_data(N.OTU.dt.L30.ID80.level4)$Codes))
-
-
-f.design<-model.matrix(~0+Landuse, categories) # not a mistake; design/contrast matrix is the same
-#colnames(design) <- gsub("group3", "", colnames(design))
-contr.matrix <- makeContrasts(
-  TurfvRef = LanduseTurf-LanduseReference, 
-  RemvRef = LanduseRemnant-LanduseReference, 
-  RudvRef = LanduseRuderal-LanduseReference, 
-  levels = colnames(f.design))
-contr.matrix 
-
-
-f3.dge <- DGEList(counts=counts3)
-
-f3.keep <- filterByExpr(f3.dge, f.design) # design is the same...
-f3.dge <- f3.dge[f3.keep,,keep.lib.sizes=FALSE]
-
-f3.dge <- calcNormFactors(f3.dge)
-
-#f3.dge$genes<-geneid
-#flcpm3<-cpm(f3.dge, log=TRUE)
-#col.group <- categories$Cities
-#levels(col.group) <-  brewer.pal(nlevels(col.group), "Set1")
-#sym<-as.factor(categories$Landuse)
-#plotMDS(flcpm, col=col.group, pch=as.numeric(sym))
-
-f3.v <- voom(f3.dge, f.design, plot=TRUE)
-
-f3.fitV <- lmFit(f3.v, f.design)
-
-f3.fitV <- contrasts.fit(f3.fitV, contrasts=contr.matrix)
-f3.fitV <- eBayes(f3.fitV, trend=TRUE)
-f3.topgenes<-topTable(f3.fitV, number=100, coef=3)
-f3.siggenes<-f3.topgenes[f.topgenes$adj.P.Val<0.05,]
-
-summary(decideTests(f3.fitV)) # run all together; naming scheme overwrites/not unique!!
-f3.sigsummary<-decideTests(f3.fitV)
-f3.TurfP <- which(f3.sigsummary[,1]==1)
-f3.TurfN <- which(f3.sigsummary[,1]==-1)
-f3.RemP <- which(f3.sigsummary[,2]==1)
-f3.RemN <- which(f3.sigsummary[,2]==-1)
-f3.RudP <- which(f3.sigsummary[,3]==1)
-f3.RudN <- which(f3.sigsummary[,3]==-1)
-
-names(f3.TurfP)
-names(f3.TurfN)
-names(f3.RemP)
-names(f3.RemN)
-names(f3.RudP)
-names(f3.RudN)
-
-# Function @ 30 bp match 60% e -15
-counts3<-t(as.data.frame(as.matrix(otu_table(N.OTU.dt.L30.ID60.level4))))
-geneid <- rownames(counts3)
-
-categories<-data.frame("Cities"=as.factor(sample_data(N.OTU.dt.L30.ID60.level4)$Cities), "Landuse"=as.factor(sample_data(N.OTU.dt.L30.ID60.level4)$Codes))
-
-
-f.design<-model.matrix(~0+Landuse, categories) # not a mistake; design/contrast matrix is the same
-#colnames(design) <- gsub("group3", "", colnames(design))
-contr.matrix <- makeContrasts(
-  TurfvRef = LanduseTurf-LanduseReference, 
-  RemvRef = LanduseRemnant-LanduseReference, 
-  RudvRef = LanduseRuderal-LanduseReference, 
-  levels = colnames(f.design))
-contr.matrix 
-
-
-f3.dge <- DGEList(counts=counts3)
-
-f3.keep <- filterByExpr(f3.dge, f.design) # design is the same...
-f3.dge <- f3.dge[f3.keep,,keep.lib.sizes=FALSE]
-
-f3.dge <- calcNormFactors(f3.dge)
-
-#f3.dge$genes<-geneid
-#flcpm3<-cpm(f3.dge, log=TRUE)
-#col.group <- categories$Cities
-#levels(col.group) <-  brewer.pal(nlevels(col.group), "Set1")
-#sym<-as.factor(categories$Landuse)
-#plotMDS(flcpm, col=col.group, pch=as.numeric(sym))
-
-f3.v <- voom(f3.dge, f.design, plot=TRUE)
-
-f3.fitV <- lmFit(f3.v, f.design)
-
-f3.fitV <- contrasts.fit(f3.fitV, contrasts=contr.matrix)
-f3.fitV <- eBayes(f3.fitV, trend=TRUE)
-f3.topgenes<-topTable(f3.fitV, number=100, coef=3)
-f3.siggenes<-f3.topgenes[f.topgenes$adj.P.Val<0.05,]
-
-summary(decideTests(f3.fitV)) # run all together; naming scheme overwrites/not unique!!
-f3.sigsummary<-decideTests(f3.fitV)
-f3.TurfP <- which(f3.sigsummary[,1]==1)
-f3.TurfN <- which(f3.sigsummary[,1]==-1)
-f3.RemP <- which(f3.sigsummary[,2]==1)
-f3.RemN <- which(f3.sigsummary[,2]==-1)
-f3.RudP <- which(f3.sigsummary[,3]==1)
-f3.RudN <- which(f3.sigsummary[,3]==-1)
-
-names(f3.TurfP)
-names(f3.TurfN)
-names(f3.RemP)
-names(f3.RemN)
-names(f3.RudP)
-names(f3.RudN)
-
-
-
 
 # bac differential expression ####
 
@@ -2503,112 +2105,24 @@ mg.Cd<-data.frame("mg"=sample_sums(CadmiumResistance), "Cd"=sample_data(CadmiumR
 with(mg.Cd, cor(mg,Cd, use="pairwise.complete.obs"))
 with(mg.Cd, cor(mg,Cdt, use="pairwise.complete.obs"))
 with(mg.Cd, plot(mg~log10(Cd), col=Land))
-with(mg.Cd, leveneTest(mg, Land))
 
 mg.Co<-data.frame("mg"=sample_sums(CobaltTransport), "Co"=sample_data(CobaltTransport)$Co_tot, "Cdt"=sample_data(CobaltTransport)$Co_avail,"Land"=sample_data(CobaltTransport)$Codes)
 
 with(mg.Co, cor(mg,Co, use="pairwise.complete.obs"))
 with(mg.Co, cor(mg,Cdt, use="pairwise.complete.obs"))
 with(mg.Co, plot(mg~Land))
-with(mg.Co, leveneTest(mg, Land))
 
 mg.Ni<-data.frame("mg"=sample_sums(NickelTransport), "Ni"=sample_data(NickelTransport)$Ni_tot, "Nit"=sample_data(NickelTransport)$Ni_avail,"Land"=sample_data(NickelTransport)$Codes)
 
 with(mg.Ni, cor(mg,Ni, use="pairwise.complete.obs"))
+with(mg.Ni, cor(mg,Nit, use="pairwise.complete.obs"))
+
+mg.Zn<-data.frame("mg"=sample_sums(NickelTransport), "Zn"=sample_data(NickelTransport)$Zn_tot, "Znt"=sample_data(NickelTransport)$Zn_avail,"Land"=sample_data(NickelTransport)$Codes)
+
 with(mg.Ni, cor(mg,Ni, use="pairwise.complete.obs"))
-with(mg.Ni, leveneTest(mg, Land))
+with(mg.Ni, cor(mg,Nit, use="pairwise.complete.obs"))
+# barcharts and p-values
 
-mg.Zn<-data.frame("mg"=sample_sums(ZincResistance), "Zn"=sample_data(NickelTransport)$Zn_tot, "Znt"=sample_data(NickelTransport)$Zn_avail,"Land"=sample_data(NickelTransport)$Codes)
-
-with(mg.Zn, cor(mg, Zn, use="pairwise.complete.obs"))
-with(mg.Zn, cor(mg,Zn, use="pairwise.complete.obs"))
-with(mg.Zn, leveneTest(mg, Land))
-
-# multivariate convergence : betadisper
-all.dist<-vegdist(otu_table(L4Norm), method="bray", binary=FALSE, diag=FALSE, upper=FALSE, na.rm=FALSE)
-GroupC<-sample_data(L4Norm)$Codes
-all.disp<-betadisper(all.dist, GroupC, type=c("median"))
-anova(all.disp)
-
-N.metdist<-vegdist(otu_table(N.metabolism), method="bray", binary=FALSE, diag=FALSE, upper=FALSE, na.rm=FALSE)
-GroupC<-sample_data(N.metabolism)$Codes
-N.met.disp<-betadisper(N.metdist, GroupC, type=c("median"))
-anova(N.met.disp)
-leveneTest(sample_sums(N.metabolism), GroupC)
-
-aromatics.dist<-vegdist(otu_table(AromaticCompounds), method="bray", binary=FALSE, diag=FALSE, upper=FALSE, na.rm=FALSE)
-GroupC<-sample_data(AromaticCompounds)$Codes
-aromatics.disp<-betadisper(aromatics.dist, GroupC, type=c("median"))
-anova(aromatics.disp)
-leveneTest(sample_sums(AromaticCompounds), GroupC)
-
-Nitrite<-vegdist(otu_table(Nitrite.R.All), method="bray", binary=FALSE, diag=FALSE, upper=FALSE, na.rm=FALSE)
-GroupC<-sample_data(Nitrite.R.All)$Codes
-Nitrite.disp<-betadisper(Nitrite, GroupC, type=c("median"))
-anova(Nitrite.disp)
-leveneTest(sample_sums(Nitrite.R.All), GroupC)
-
-Nx<-vegdist(otu_table(Nx.Reductase), method="bray", binary=FALSE, diag=FALSE, upper=FALSE, na.rm=FALSE)
-GroupC<-sample_data(Nx.Reductase)$Codes
-Nx.disp<-betadisper(Nx, GroupC, type=c("median"))
-anova(Nx.disp)
-leveneTest(sample_sums(Nx.Reductase), GroupC)
-
-Antibio<-vegdist(otu_table(Antibiotics), method="bray", binary=FALSE, diag=FALSE, upper=FALSE, na.rm=FALSE)
-GroupC<-sample_data(Antibiotics)$Codes
-Antibio.disp<-betadisper(Antibio, GroupC, type=c("median"))
-anova(Antibio.disp)
-leveneTest(sample_sums(Antibiotics), GroupC)
-
-NiT<-vegdist(otu_table(NickelTransport), method="bray", binary=FALSE, diag=FALSE, upper=FALSE, na.rm=FALSE)
-GroupC<-sample_data(NickelTransport)$Codes
-NiT.disp<-betadisper(NiT, GroupC, type=c("median"))
-anova(NiT.disp)
-leveneTest(sample_sums(NickelTransport), GroupC)
-
-CoT<-vegdist(otu_table(CobaltTransport), method="bray", binary=FALSE, diag=FALSE, upper=FALSE, na.rm=FALSE)
-GroupC<-sample_data(CobaltTransport)$Codes
-CoT.disp<-betadisper(CoT, GroupC, type=c("median"))
-anova(CoT.disp)
-leveneTest(sample_sums(CobaltTransport), GroupC)
-
-ArsenicR<-vegdist(otu_table(ArsenicResistance), method="bray", binary=FALSE, diag=FALSE, upper=FALSE, na.rm=FALSE)
-GroupC<-sample_data(ArsenicResistance)$Codes
-ArsinicR.disp<-betadisper(ArsenicR, GroupC, type=c("median"))
-anova(ArsinicR.disp)
-leveneTest(sample_sums(ArsenicResistance), GroupC)
-
-CopperR<-vegdist(otu_table(CopperRegulation), method="bray", binary=FALSE, diag=FALSE, upper=FALSE, na.rm=FALSE)
-GroupC<-sample_data(CopperRegulation)$Codes
-CopperR.disp<-betadisper(CopperR, GroupC, type=c("median"))
-anova(CopperR.disp)
-leveneTest(sample_sums(CopperRegulation), GroupC)
-
-CadmiumR<-vegdist(otu_table(CadmiumResistance), method="bray", binary=FALSE, diag=FALSE, upper=FALSE, na.rm=FALSE)
-GroupC<-sample_data(CadmiumResistance)$Codes
-CadmiumR.disp<-betadisper(CadmiumR, GroupC, type=c("median"))
-anova(CadmiumR.disp)
-leveneTest(sample_sums(CadmiumResistance), GroupC)
-
-Czc<-vegdist(otu_table(CZC), method="bray", binary=FALSE, diag=FALSE, upper=FALSE, na.rm=FALSE)
-GroupC<-sample_data(CZC)$Codes
-Czc.disp<-betadisper(Czc, GroupC, type=c("median"))
-anova(Czc.disp)
-leveneTest(sample_sums(CZC), GroupC)
-
-Nitro<-vegdist(otu_table(Nitrogenase), method="bray", binary=FALSE, diag=FALSE, upper=FALSE, na.rm=FALSE)
-GroupC<-sample_data(Nitrogenase)$Codes
-Nitro.disp<-betadisper(Nitro, GroupC, type=c("median"))
-anova(Nitro.disp)
-leveneTest(sample_sums(Nitrogenase), GroupC)
-
-
-
-ZnR<-vegdist(otu_table(ZincResistance), method="bray", binary=FALSE, diag=FALSE, upper=FALSE, na.rm=FALSE)
-GroupC<-sample_data(ZincResistance)$Codes
-ZnR.disp<-betadisper(ZnR, GroupC, type=c("median"))
-anova(ZnR.disp)
-leveneTest(sample_sums(ZincResistance), GroupC)
 
 # richness ####
 plot_richness(dt15, x = "samplecodes", measures=c("Shannon")) + geom_boxplot()
@@ -2682,6 +2196,7 @@ library(igraph)
 #vertices starts with a column of node IDs. Any following columns are interpreted as node attributes.
 # http://kateto.net/networks-r-igraph
 library(igraph)
+
 
 
 
@@ -3034,7 +2549,7 @@ p4d$dat<-
 phylosig(trefile, NFT.cor$SS00448, method="lambda", test=TRUE)
 phyloSignal(tree, methods="lambda", reps=999)
 
- 
+
 # convergence testing Networks ####
 library(car)
 
@@ -3352,16 +2867,3 @@ ddply(data.frame("gene"=sample_sums(subset_taxa(rdt15.l4, L4=="Ni,Fe-hydrogenase
 ddply(data.frame("gene"=sample_sums(subset_taxa(rdt15.l4, L4=="[NiFe] hydrogenase nickel incorporation protein HybF")), "Land"=sample_data(rdt15.l4)$Codes), .(Land), summarise, 
       median=median(gene),
       mean=mean(gene))
-
-
-# update mgrastr ####
-# for me, as I edit the source code
-setwd("~/Documents/GitHub/mgrastr/")
-document()
-setwd("..")
-install("mgrastr")
-library(mgrastr)
-
-# for everyone else as they use it
-library("devtools")
-install_github("mgraster", "djeppschmidt")
